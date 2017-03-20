@@ -1,0 +1,9 @@
+import time
+import csv
+
+filename_csv = time.strftime("%Y-%m-%d-%H:%M:%S") + ".csv"
+with open('../results/' + filename_csv, 'w') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(['Id'] + ['Prediction'])
+    for idx, label_predicted in enumerate(labels_predicted):
+        writer.writerow([str(idx+1)] + [str(label_predicted)])
