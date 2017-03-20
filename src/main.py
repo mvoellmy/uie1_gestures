@@ -24,7 +24,7 @@ _use_SVM = True
 _predict_test_data = True
 
 
-def get_HOG(img, orientations=8, pixels_per_cell=(4, 4), cells_per_block=(4, 4), widthPadding=10):
+def get_HOG(img, orientations=8, pixels_per_cell=(12, 12), cells_per_block=(4, 4), widthPadding=10):
     """
     Calculates HOG feature vector for the given image.
 
@@ -126,13 +126,14 @@ else:
 if _use_SVM:
     # Optimize the parameters by cross-validation
     parameters = [
-        {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [0.01, 1, 10, 100]},
+        {'kernel': ['rbf'], 'gamma': [1, 1e-2, 1e-3, 1e-4], 'C': [0.01, 1, 10, 100]},
         # {'kernel': ['linear'], 'C': [0.01, 1, 10, 100]},
-        {'kernel': ['poly'], 'gamma': [1e-3, 0.2], 'C': [100, 1000], 'degree': [2, 3]}
+        {'kernel': ['poly'], 'degree': [2, 3]}
     ]
 
     # Grid search object with SVM classifier.
-    clf = GridSearchCV(SVC(), parameters, cv=10, n_jobs=-1, verbose=10)
+    clf = GridSearchCV(SVC(), parameters, cv=5, n_jobs=-1, verbose=20)
+    print("GridSearch Object created")
     clf.fit(train_data, train_labels)
 
     print("Best parameters set found on training set:")
