@@ -24,7 +24,7 @@ _use_SVM = True
 _predict_test_data = True
 
 
-def get_HOG(img, orientations=8, pixels_per_cell=(12, 12), cells_per_block=(4, 4), widthPadding=10):
+def get_HOG(img, orientations=8, pixels_per_cell=(4, 4), cells_per_block=(4, 4), widthPadding=10):
     """
     Calculates HOG feature vector for the given image.
 
