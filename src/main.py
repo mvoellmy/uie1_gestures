@@ -78,6 +78,7 @@ def get_features(dataset):
     :param dataset:
     :return: Feature Vector
     """
+    print("Creating Features")
     # split dataset
     segmentation_imgs = dataset['segmentation']
     rgb_imgs = dataset['rgb']
@@ -126,7 +127,7 @@ else:
 if _use_SVM:
     # Optimize the parameters by cross-validation
     parameters = [
-        {'kernel': ['rbf'], 'gamma': [1, 1e-2, 1e-3, 1e-4], 'C': [0.01, 1, 10, 100]},
+        # {'kernel': ['rbf'], 'gamma': [1, 1e-2, 1e-3, 1e-4], 'C': [0.01, 1, 10, 100]},
         # {'kernel': ['linear'], 'C': [0.01, 1, 10, 100]},
         {'kernel': ['poly'], 'degree': [2, 3]}
     ]
