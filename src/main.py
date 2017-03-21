@@ -9,23 +9,30 @@ import matplotlib.pyplot as plt
 from skimage import feature
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-
+from scipy.stats import randint as sp_randint
 
 _chunks_train = 1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_train = "../data/train/a1_dataTrain_chunks/a1_dataTrain_CHUNKNR.pkl"
 _path_train = "../data/train/a1_dataTrain.pkl"
 
-_chunks_test = -1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
+_chunks_test = 1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_test = "../data/test/a1_dataTest_chunks/a1_dataTest_CHUNKNR.pkl"
 _path_test = "../data/test/a1_dataTest.pkl"
+_path_test = "a1_dataTest.pkl"
 _use_HOG = True
-_use_SVM = True
-_predict_test_data = True
-_use_RGB = True
-_use_depth = False
+_use_SVM = False
+_use_RF = True
 
-def get_HOG(img, orientations=8, pixels_per_cell=(4, 4), cells_per_block=(4, 4), widthPadding=10):
+_predict_test_data = False
+_save_model = True
+
+_use_RGB = False
+_use_depth = True
+
+def get_HOG(img, orientations=8, pixels_per_cell=(12, 12), cells_per_block=(4, 4), widthPadding=10):
     """
     Calculates HOG feature vector for the given image.
 
@@ -141,9 +148,9 @@ else:
 if _use_SVM:
     # Optimize the parameters by cross-validation
     parameters = [
-        # {'kernel': ['rbf'], 'gamma': [100, 10, 1], 'C': [1, 100, 1000]},
-        # {'kernel': ['linear'], 'C': [1000, 0.01]},
-        {'kernel': ['poly'], 'degree': [2, 3]}
+        {'kernel': ['rbf'], 'gamma': [100, 10, 1], 'C': [1, 100, 1000]},
+        #{'kernel': ['linear'], 'C': [1000, 0.01]},
+        #{'kernel': ['poly'], 'degree': [2, 3]}
     ]
 
     # Grid search object with SVM classifier.
@@ -154,6 +161,31 @@ if _use_SVM:
     print("Best parameters set found on training set:")
     print(clf.best_params_)
     print()
+
+elif _use_RF:
+    # Optimize the parameters by cross-validation.
+    parameters = {
+            "max_depth": 6,
+            "max_features": sp_randint(1, 4),
+            "min_samples_split": sp_randint(2, 10),
+            "min_samples_leaf": sp_randint(2, 10),
+            'n_estimators': 5,
+    }
+
+    clf = RandomizedSearchCV(
+        estimator=RandomForestClassifier(random_state=1),
+        param_distributions=parameters,
+        n_iter=10,
+        cv=10,
+        random_state=1,
+    )
+    print("RandomForest object created")
+    clf.fit(train_data, train_labels)
+
+    print("Best parameters set found on training set:")
+    print(clf.best_params_)
+    print()
+
 
 # means_valid = clf.cv_results_['mean_test_score']
 # stds_valid = clf.cv_results_['std_test_score']
@@ -167,6 +199,11 @@ if _use_SVM:
 
     print("#########################")
     print("Model has been trained...")
+    if _save_model:
+        # save the model to disk
+        filename_sav = time.strftime("%Y-%m-%d-%H:%M:%S") + ".sav"
+        pickle.dump(clf, open('../models/' + filename_sav, 'wb'))
+
     print("Starting test dataset...")
     labels_predicted = clf.predict(test_data)
 
@@ -180,5 +217,6 @@ if _use_SVM:
         print("Dataset has been tested")
     else:
         print("Test Accuracy [%0.3f]" % ((labels_predicted == test_labels).mean()))
+
 
 print("Program successfully finished")
