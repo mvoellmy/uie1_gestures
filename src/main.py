@@ -22,7 +22,8 @@ _path_test = "../data/test/a1_dataTest.pkl"
 _use_HOG = True
 _use_SVM = True
 _predict_test_data = True
-
+_use_RGB = True
+_use_depth = False
 
 def get_HOG(img, orientations=8, pixels_per_cell=(4, 4), cells_per_block=(4, 4), widthPadding=10):
     """
@@ -84,19 +85,34 @@ def get_features(dataset):
     rgb_imgs = dataset['rgb']
     depth_imgs = dataset['depth']
 
+    if _use_RGB:
+        imgs = rgb_imgs
+    elif _use_depth:
+        imgs = depth_imgs
+    else:
+        print("You must use RGB or depth")
+
     features = []
-    for segmentation_img, depth_img in zip(segmentation_imgs, depth_imgs):
+    # for segmentation_img, img in zip(segmentation_imgs, depth_imgs):
+    for segmentation_img, img in zip(segmentation_imgs, imgs):
         if _use_HOG:
             # Fetch the segmentation mask of the image.
             mask_depth = np.mean(segmentation_img, axis=2) > 150  # For depth images.
-            mask_rgb = np.tile(mask_depth, (3, 1, 1))  # For 3-channel images (rgb)
-            mask_rgb = mask_rgb.transpose((1, 2, 0))
+
+            if _use_RGB:
+                mask_rgb = np.tile(mask_depth, (3, 1, 1))  # For 3-channel images (rgb)
+                mask = mask_rgb.transpose((1, 2, 0))
+
+            elif _use_depth:
+                mask = mask_depth
+            else:
+                print("You must use RGB or depth")
 
             # Mask the image
-            masked_depth = depth_img * mask_depth
+            masked_img = img * mask
 
             # Extract Features from Images (Hog, SIFT)
-            hog_features = get_HOG(masked_depth)
+            hog_features = get_HOG(masked_img)
             features.append(hog_features)
         else:
             print("Error: No other features implemented!")
@@ -125,9 +141,9 @@ else:
 if _use_SVM:
     # Optimize the parameters by cross-validation
     parameters = [
-        {'kernel': ['rbf'], 'gamma': [100, 10, 1], 'C': [100, 1000]},
-        {'kernel': ['linear'], 'C': [1000, 0.01]},
-        # {'kernel': ['poly'], 'degree': [2, 3]}
+        # {'kernel': ['rbf'], 'gamma': [100, 10, 1], 'C': [1, 100, 1000]},
+        # {'kernel': ['linear'], 'C': [1000, 0.01]},
+        {'kernel': ['poly'], 'degree': [2, 3]}
     ]
 
     # Grid search object with SVM classifier.
