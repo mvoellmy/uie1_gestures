@@ -85,7 +85,6 @@ def get_features(dataset):
     depth_imgs = dataset['depth']
 
     features = []
-    m_features = []
     for segmentation_img, depth_img in zip(segmentation_imgs, depth_imgs):
         if _use_HOG:
             # Fetch the segmentation mask of the image.
@@ -93,18 +92,17 @@ def get_features(dataset):
             mask_rgb = np.tile(mask_depth, (3, 1, 1))  # For 3-channel images (rgb)
             mask_rgb = mask_rgb.transpose((1, 2, 0))
 
-            # Extract Features from Images (Hog, SIFT)
+            # Mask the image
             masked_depth = depth_img * mask_depth
-            m_hog_features = get_HOG(masked_depth)
-            hog_features = get_HOG(mask_depth)
+
+            # Extract Features from Images (Hog, SIFT)
+            hog_features = get_HOG(masked_depth)
             features.append(hog_features)
-            m_features.append(m_hog_features)
         else:
             print("Error: No other features implemented!")
 
     print(len(features))
-    print(len(m_features))
-    return m_features
+    return features
 
 dataset_train = load_data(_path_train, _template_chunks_path_train, _chunks_train)
 dataset_test = load_data(_path_test, _template_chunks_path_test, _chunks_test)
@@ -127,9 +125,9 @@ else:
 if _use_SVM:
     # Optimize the parameters by cross-validation
     parameters = [
-        # {'kernel': ['rbf'], 'gamma': [1, 1e-2, 1e-3, 1e-4], 'C': [0.01, 1, 10, 100]},
-        # {'kernel': ['linear'], 'C': [0.01, 1, 10, 100]},
-        {'kernel': ['poly'], 'degree': [2, 3]}
+        {'kernel': ['rbf'], 'gamma': [100, 10, 1], 'C': [100, 1000]},
+        {'kernel': ['linear'], 'C': [1000, 0.01]},
+        # {'kernel': ['poly'], 'degree': [2, 3]}
     ]
 
     # Grid search object with SVM classifier.
