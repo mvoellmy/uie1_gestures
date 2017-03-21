@@ -12,7 +12,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 
 
-_chunks_train = 1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
+_chunks_train = 89  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_train = "../data/train/a1_dataTrain_chunks/a1_dataTrain_CHUNKNR.pkl"
 _path_train = "../data/train/a1_dataTrain.pkl"
 
@@ -133,7 +133,7 @@ if _use_SVM:
     ]
 
     # Grid search object with SVM classifier.
-    clf = GridSearchCV(SVC(), parameters, cv=5, n_jobs=-1, verbose=20)
+    clf = GridSearchCV(SVC(), parameters, cv=5, n_jobs=8, verbose=20)
     print("GridSearch Object created")
     clf.fit(train_data, train_labels)
 
