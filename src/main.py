@@ -14,8 +14,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from scipy.stats import randint as sp_randint
 
+
+print("Program has started...importing files...")
+
 # Data paths
-_chunks_train = -1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
+_chunks_train = 1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_train = "../data/train/a1_dataTrain_chunks/a1_dataTrain_CHUNKNR.pkl"
 _path_train = "../data/train/a1_dataTrain.pkl"
 
@@ -31,8 +34,8 @@ _use_depth = True
 _use_HOG = True
 
 # Model
-_use_SVM = False
-_use_RF = True
+_use_SVM = True
+_use_RF = False
 
 # Model evaluation
 _predict_test_data = True
@@ -64,7 +67,7 @@ def load_data(path, template_chunks_path, chunks):
     return dataset
 
 
-def get_HOG(img, orientations=8, pixels_per_cell=(10, 10), cells_per_block=(4, 4), widthPadding=10):
+def get_HOG(img, orientations=8, pixels_per_cell=(12, 12), cells_per_block=(4, 4), widthPadding=10):
     """
     Calculates HOG feature vector for the given image.
 
@@ -155,13 +158,13 @@ else:
 if _use_SVM:
     # Optimize the parameters by cross-validation
     parameters = [
-        {'kernel': ['rbf'], 'gamma': [100, 10, 1], 'C': [1, 100, 1000]},
-        #{'kernel': ['linear'], 'C': [1000, 0.01]},
-        #{'kernel': ['poly'], 'degree': [2, 3]}
+        {'kernel': ['rbf'], 'gamma': [1, 2], 'C': [100, 500]},
+        # {'kernel': ['linear'], 'C': [1000, 500]},
+        # {'kernel': ['poly'], 'degree': [2, 3]}
     ]
 
     # Grid search object with SVM classifier.
-    clf = GridSearchCV(SVC(), parameters, cv=5, n_jobs=-1, verbose=20)
+    clf = GridSearchCV(SVC(), parameters, cv=10, n_jobs=-1, verbose=20)
     print("GridSearch Object created")
     clf.fit(train_data, train_labels)
 
