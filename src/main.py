@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 
+print("Program has started...importing files...")
 
 _chunks_train = -1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_train = "../data/train/a1_dataTrain_chunks/a1_dataTrain_CHUNKNR.pkl"
