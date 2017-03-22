@@ -18,7 +18,7 @@ from scipy.stats import randint as sp_randint
 print("Program has started...importing files...")
 
 # Data paths
-_chunks_train = 1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
+_chunks_train = -1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_train = "../data/train/a1_dataTrain_chunks/a1_dataTrain_CHUNKNR.pkl"
 _path_train = "../data/train/a1_dataTrain.pkl"
 
@@ -205,7 +205,6 @@ elif _use_RF:
 
     print("Best parameters set found on training set:")
     print(clf.best_params_)
-
 
     print("#########################")
     print("Model has been trained.")
