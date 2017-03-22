@@ -9,44 +9,37 @@ import matplotlib.pyplot as plt
 from skimage import feature
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
+from scipy.stats import randint as sp_randint
+
 
 print("Program has started...importing files...")
 
-_chunks_train = -1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
+# Data paths
+_chunks_train = 1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_train = "../data/train/a1_dataTrain_chunks/a1_dataTrain_CHUNKNR.pkl"
 _path_train = "../data/train/a1_dataTrain.pkl"
 
 _chunks_test = -1  # -1=all, 0-9 for single chunks, 12 loads chunks 1 and 2
 _template_chunks_path_test = "../data/test/a1_dataTest_chunks/a1_dataTest_CHUNKNR.pkl"
 _path_test = "../data/test/a1_dataTest.pkl"
+
+# Source Image
+_use_RGB = False
+_use_depth = True
+
+# Classifier
 _use_HOG = True
+
+# Model
 _use_SVM = True
+_use_RF = False
+
+# Model evaluation
 _predict_test_data = True
-_use_RGB = True
-_use_depth = False
-
-def get_HOG(img, orientations=8, pixels_per_cell=(12, 12), cells_per_block=(4, 4), widthPadding=10):
-    """
-    Calculates HOG feature vector for the given image.
-
-    img is a numpy array of 2- or 3-dimensional image (i.e., grayscale or rgb).
-    Color-images are first transformed to grayscale since HOG requires grayscale
-    images.
-
-    Reference: http://scikit-image.org/docs/dev/api/skimage.feature.html#skimage.feature.hog
-    """
-    if len(img.shape) > 2:
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-    # Crop the image from left and right.
-    if widthPadding > 0:
-        img = img[:, widthPadding:-widthPadding]
-
-    # Note that we are using skimage.feature.
-    hog_features = feature.hog(img, orientations, pixels_per_cell, cells_per_block)
-
-    return hog_features
+_save_model = True
 
 
 def load_data(path, template_chunks_path, chunks):
@@ -72,6 +65,29 @@ def load_data(path, template_chunks_path, chunks):
     print("Dataset succesfully loaded")
 
     return dataset
+
+
+def get_HOG(img, orientations=8, pixels_per_cell=(12, 12), cells_per_block=(4, 4), widthPadding=10):
+    """
+    Calculates HOG feature vector for the given image.
+
+    img is a numpy array of 2- or 3-dimensional image (i.e., grayscale or rgb).
+    Color-images are first transformed to grayscale since HOG requires grayscale
+    images.
+
+    Reference: http://scikit-image.org/docs/dev/api/skimage.feature.html#skimage.feature.hog
+    """
+    if len(img.shape) > 2:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+    # Crop the image from left and right.
+    if widthPadding > 0:
+        img = img[:, widthPadding:-widthPadding]
+
+    # Note that we are using skimage.feature.
+    hog_features = feature.hog(img, orientations, pixels_per_cell, cells_per_block)
+
+    return hog_features
 
 
 def get_features(dataset):
@@ -156,18 +172,49 @@ if _use_SVM:
     print(clf.best_params_)
     print()
 
-# means_valid = clf.cv_results_['mean_test_score']
-# stds_valid = clf.cv_results_['std_test_score']
-# means_train = clf.cv_results_['mean_train_score']
-#
-#
-# print("Grid scores:")
-# for mean_valid, std_valid, mean_train, params in zip(means_valid, stds_valid, means_train, clf.cv_results_['params']):
-#    print("Validation: %0.3f (+/-%0.03f), Training: %0.3f  for %r" % (mean_valid, std_valid, mean_train, params))
-# print()
+elif _use_RF:
+    # Optimize the parameters by cross-validation.
+    # parameters = {
+    #         "max_depth": 6,
+    #         "max_features": sp_randint(1, 4),
+    #         "min_samples_split": sp_randint(2, 10),
+    #         "min_samples_leaf": sp_randint(2, 10),
+    #         'n_estimators': 5,
+    # }
+
+    parameters = {
+        "max_depth": sp_randint(14, 17),
+        "max_features": [.9],
+        "min_samples_split": sp_randint(2, 10),
+        "min_samples_leaf": sp_randint(2, 10),
+        'n_estimators': [7, 10]
+    }
+
+    clf = RandomizedSearchCV(
+        estimator=RandomForestClassifier(random_state=1),
+        param_distributions=parameters,
+        n_iter=10,
+        cv=10,
+        random_state=1,
+        verbose=20,
+        n_jobs=-1
+
+    )
+    print("RandomForest object created")
+    clf.fit(train_data, train_labels)
+
+    print("Best parameters set found on training set:")
+    print(clf.best_params_)
+
 
     print("#########################")
-    print("Model has been trained...")
+    print("Model has been trained.")
+    if _save_model:
+        # save the model to disk
+        filename_sav = time.strftime("%Y-%m-%d-%H:%M:%S") + ".sav"
+        pickle.dump(clf, open('../models/' + filename_sav, 'wb'))
+        print("Model has been saved.")
+
     print("Starting test dataset...")
     labels_predicted = clf.predict(test_data)
 
@@ -181,5 +228,6 @@ if _use_SVM:
         print("Dataset has been tested")
     else:
         print("Test Accuracy [%0.3f]" % ((labels_predicted == test_labels).mean()))
+
 
 print("Program successfully finished")
