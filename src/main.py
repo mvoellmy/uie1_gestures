@@ -67,7 +67,7 @@ def load_data(path, template_chunks_path, chunks):
     return dataset
 
 
-def get_HOG(img, orientations=8, pixels_per_cell=(12, 12), cells_per_block=(4, 4), widthPadding=10):
+def get_HOG(img, orientations=8, pixels_per_cell=(10, 10), cells_per_block=(4, 4), widthPadding=10):
     """
     Calculates HOG feature vector for the given image.
 
@@ -158,13 +158,13 @@ else:
 if _use_SVM:
     # Optimize the parameters by cross-validation
     parameters = [
-        {'kernel': ['rbf'], 'gamma': [1, 2], 'C': [100, 500]},
+        {'kernel': ['rbf'], 'gamma': [2], 'C': [100]},
         # {'kernel': ['linear'], 'C': [1000, 500]},
         # {'kernel': ['poly'], 'degree': [2, 3]}
     ]
 
     # Grid search object with SVM classifier.
-    clf = GridSearchCV(SVC(), parameters, cv=10, n_jobs=-1, verbose=20)
+    clf = GridSearchCV(SVC(), parameters, cv=8, n_jobs=-1, verbose=20)
     print("GridSearch Object created")
     clf.fit(train_data, train_labels)
 
@@ -194,7 +194,7 @@ elif _use_RF:
         estimator=RandomForestClassifier(random_state=1),
         param_distributions=parameters,
         n_iter=10,
-        cv=10,
+        cv=3,
         random_state=1,
         verbose=20,
         n_jobs=-1
@@ -206,27 +206,27 @@ elif _use_RF:
     print("Best parameters set found on training set:")
     print(clf.best_params_)
 
-    print("#########################")
-    print("Model has been trained.")
-    if _save_model:
-        # save the model to disk
-        filename_sav = time.strftime("%Y-%m-%d-%H:%M:%S") + ".sav"
-        pickle.dump(clf, open('../models/' + filename_sav, 'wb'))
-        print("Model has been saved.")
+print("#########################")
+print("Model has been trained.")
+if _save_model:
+    # save the model to disk
+    filename_sav = time.strftime("%Y-%m-%d-%H_%M_%S") + ".sav"
+    pickle.dump(clf, open('../models/' + filename_sav, 'wb'))
+    print("Model has been saved.")
 
-    print("Starting test dataset...")
-    labels_predicted = clf.predict(test_data)
+print("Starting test dataset...")
+labels_predicted = clf.predict(test_data)
 
-    if _predict_test_data:
-        filename_csv = time.strftime("%Y-%m-%d-%H:%M:%S") + ".csv"
-        with open('../results/' + filename_csv, 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(['Id'] + ['Prediction'])
-            for idx, label_predicted in enumerate(labels_predicted):
-                writer.writerow([str(idx+1)] + [str(label_predicted)])
-        print("Dataset has been tested")
-    else:
-        print("Test Accuracy [%0.3f]" % ((labels_predicted == test_labels).mean()))
+if _predict_test_data:
+    filename_csv = time.strftime("%Y-%m-%d-%H_%M_%S") + ".csv"
+    with open('../results/' + filename_csv, 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow(['Id'] + ['Prediction'])
+        for idx, label_predicted in enumerate(labels_predicted):
+            writer.writerow([str(idx+1)] + [str(label_predicted)])
+    print("Dataset has been tested")
+else:
+    print("Test Accuracy [%0.3f]" % ((labels_predicted == test_labels).mean()))
 
 
 print("Program successfully finished")
